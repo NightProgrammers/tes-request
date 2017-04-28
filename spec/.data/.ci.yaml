@@ -1,0 +1,51 @@
+---
+one_pattern:
+  spec:
+    pattern: spec/a/**/*_spec.rb
+many_patterns:
+  spec:
+    pattern:
+    - spec/a/**/*_spec.rb
+    - spec/b/**/*_spec.rb
+    - spec/h*_spec.rb
+with_one_exclude_pattern:
+  spec:
+    pattern:
+    - spec/a/**/*_spec.rb
+    - spec/b/**/*_spec.rb
+    exclude_pattern: spec/**/exclude_*_spec.rb
+with_many_exclude_pattern:
+  spec:
+    pattern:
+    - spec/a/**/*_spec.rb
+    - spec/b/**/*_spec.rb
+    exclude_pattern:
+    - spec/**/exclude_*_spec.rb
+    - spec/**/broken_*_spec.rb
+pattern_with_locations:
+  spec:
+    pattern:
+    - spec/a/2/test1_spec.rb:13
+    - spec/a/1_spec.rb:16
+    - spec/a/1_spec.rb:13
+    - spec/b/**/*_spec.rb
+pattern_with_ids_no_inherit:
+  spec:
+    pattern:
+    - spec/a/2/test1_spec.rb[1:1:1:1]
+    - spec/a/1_spec.rb[1:1:2]
+    - spec/a/1_spec.rb[1:1:1]
+    - spec/b/**/*_spec.rb
+pattern_with_ids_inherit:
+  spec:
+    pattern:
+      - spec/a/2/test1_spec.rb[1:1]
+      - spec/a/1_spec.rb[1:2:1]
+      - spec/a/1_spec.rb[1:2]
+      - spec/b/**/*_spec.rb
+spec_without_profile_declare:
+  spec:
+    pattern: spec/some_no_profile/**/*_spec.rb
+pattern_dir_include_disabled:
+  spec:
+    pattern: spec/include_disabled/**/*_spec.rb
