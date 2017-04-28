@@ -12,7 +12,6 @@ before_install: gem install bundler
 install: bundle
 script:
   - bundle exec rspec
-before_deploy: bundle exec rake build
 deploy:
   provider: rubygems
   api-key:
