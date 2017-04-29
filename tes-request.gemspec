@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = %q{Request Lib for TES(Test Env Service)}
   spec.description = %q{可供 Tes-Client, Tes-Provider使用的公共关于环境表达式的处理库}
-  spec.homepage = 'http://github.com/wuhuizuo/tes-request'
+  spec.homepage = 'https://github.com/wuhuizuo/tes-request'
   spec.license = 'MIT'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
