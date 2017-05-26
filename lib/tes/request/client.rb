@@ -37,8 +37,11 @@ module Tes
         ret
       end
 
-      def request_res(id, user)
-        res = @driver.post("/res/#{id}/lock", body: {user: user})
+      # @param [String] id resource id
+      # @param [String] user lock/using username
+      # @param [1,0] lock need lock? `false` == shared using
+      def request_res(id, user, lock=1)
+        res = @driver.post("/res/#{id}/lock", body: {user: user, lock: lock})
         parse_res res
       end
 
