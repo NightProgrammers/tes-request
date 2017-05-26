@@ -1,7 +1,7 @@
 # Tes::Request
 
 [![Build Status](https://travis-ci.org/wuhuizuo/tes-request.svg)](https://travis-ci.org/wuhuizuo/tes-request)
-[![Gem Version](https://badge.fury.io/rb/tes-request.svg)](https://badge.fury.io/rb/tes-request)
+[![Gem Version](https://badge.fury.io/rb/tes-request.svg)](https://rubygems.org/gems/tes-request)
 
 TES(Test Env Service) request profile struct, manager lib and request tools
 
