@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors = ['wuhuizuo']
   spec.email = ['wuhuizuo@126.com']
 
-  spec.summary = %q{Request Lib for TES(Test Env Service)}
-  spec.description = %q{可供 Tes-Client, Tes-Provider使用的公共关于环境表达式的处理库}
+  spec.summary = %q{Request libs and bins for TES(Test Env Service)}
+  spec.description = %q{Provide Tes-Client, Tes-Provider to use public Logic and data struct}
   spec.homepage = 'https://github.com/wuhuizuo/tes-request'
   spec.license = 'MIT'
 
