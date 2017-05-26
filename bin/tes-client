@@ -2,125 +2,16 @@
 
 require 'yaml'
 require 'tes/request/client'
-require_relative 'lib/tes/vmp_adaptor'
 
-def get_tes_client(base_url)
-  driver = HTTPClient.new(base_url: base_url)
-  driver.ssl_config.verify_mode= OpenSSL::SSL::VERIFY_NONE
-  Tes::Request::Client.new(driver)
-end
+if ARGV.size < 3
+  Tes::Request::ClientBin.exit_usage($0, 2)
+else
+  tes_web_url = ARGV.shift
+  tes_op_user = ARGV.shift
+  tes_op_type = ARGV.shift
+  tes_op_args = ARGV
 
-desc 'release env pool'
-task :releaseEnv, [:base_url, :user, :given_env_file] do |t, args|
-  save_file = args[:given_env_file]
-  d = get_tes_client(args[:base_url])
-  if save_file and File.exists?(save_file)
-    yaml = YAML.load_file(save_file)
-    lockes = yaml[:lockes]
-    lockes.each { |lock| d.release_res(lock, args[:user]) } if lockes
-    puts "Release env done by provided user:#{args[:user]} and file:#{save_file} ."
-  else
-    d.release_all_res(args[:user])
-    puts "Release env done by provided user:#{args[:user]} ."
-  end
-end
-
-desc 'request env pool'
-task :requestEnv, [:base_url, :user, :profile_file, :save_file] do |t, args|
-  base_url = args[:base_url]
-  user = args[:user]
-  pro_file = args[:profile_file]
-  save_file = args[:save_file]
-
-  raise('没有找到文件') unless File.exists?(pro_file)
-  asks = File.readlines(pro_file).map!(&:strip).compact
-
-  d = get_tes_client(base_url)
-
-  fail_msgs = %w(还是没申请到啊... 资源还没有申请够!,继续申请...)
-  loop do
-    ret = d.request_env(user, asks)
-    if ret[:success]
-      File.open(save_file, 'w') do |f|
-        puts '资源申请成功,保存配置:' + save_file
-        f.write ret[:data].to_yaml
-      end
-      break
-    else
-      msg = fail_msgs.pop
-      msg && puts(msg)
-      sleep 5
-    end
-  end
-end
-
-desc 'lock resource'
-task :lockRes, [:base_url, :user, :red_id] do |t, args|
-  base_url = args[:base_url]
-  user = args[:user]
-  res_id = args[:red_id]
-
-  d = get_tes_client(base_url)
-  ret = d.request_res(res_id, user)
-  if ret[:success]
-    puts '申请锁定成功(注意,如果申请cluster类型,这里并不会对其下的成员进行锁定)'
-  else
-    warn '锁定失败:该资源已被使用或者存在竞争申请!'
-  end
-end
-
-desc 'purge env storage'
-task :purgeEnv, [:test_device] do |_t, args|
-  test_env = YAML.load_file args[:test_device]
-  cluster_res_id = test_env[:res].keys.find { |k| test_env[:res][k][:type] == 'cluster' }
-
-  master_node = test_env[:res][cluster_res_id][:cfg][:master]
-  login_cfg = test_env[:res][master_node][:cfg]
-  login_cfg.merge!(:url => "https://#{login_cfg[:ip]}/")
-
-  puts '删除iscsi卷与服务器'
-  adaptor = Tes::VmpAdaptor.new login_cfg
-  test_env[:res].
-      select { |_id, detail| detail[:type] == 'storage_iscsi' }.
-      each do |_id, detail|
-    adaptor.clean_iscsi_stg detail[:cfg]
-  end
-
-  # other to purge
-end
-
-desc 'upgrade VT device'
-task :upgradeVMP, [:test_device_yaml, :dev_path] do |t, args|
-  require_relative 'lib/tes/tool/upgrade_vt'
-  upg = Tes::Tool::UpgradeVt.new
-  devices = YAML.load_file(args[:test_device_yaml])
-  devices = devices[:res].values.select { |res| res[:type] == 'node' }
-  devices.map! { |d| d[:cfg] }
-  devices.each { |d| d[:password] += 'sangfornetwork' }
-  upg.upgrade(devices, args[:dev_path])
-end
-
-desc 'check env sn info'
-task :checkEnvSn, [:base_url, :vmp_version] do |t, args|
-  d = get_tes_client(args[:base_url])
-  d.instance_exec('/res') do |url|
-    res_json = driver.get(url)
-    res_hash = parse_res res_json
-    if res_hash[:success] and
-        res_list = res_hash[:data]
-      res_list.select do |_, v|
-        v[:type] == 'cluster' and v[:label][:version] == args[:vmp_version]
-      end.each do |_k, r_v|
-        master_node = r_v[:cfg][:master]
-        login_cfg = res_list[master_node.to_sym][:cfg]
-        login_cfg.merge!(:url => "https://#{login_cfg[:ip]}/")
-
-        puts "检查集群主控:#{login_cfg[:ip]} ..."
-        adaptor = Tes::VmpAdaptor.new login_cfg
-        adaptor.get_sn_info
-      end
-    else
-      raise '获取资源列表失败!'
-    end
-  end
+  Tes::Request::ClientBin.
+      new(tes_web_url, tes_op_user).
+      run(tes_op_type, tes_op_args, $0)
 end
