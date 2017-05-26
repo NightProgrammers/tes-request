@@ -14,8 +14,7 @@ script:
   - bundle exec rspec
 deploy:
   provider: rubygems
-  api-key:
-    secure: VILjurTJb9jwpQE+RVQ93DZjqR2nVrjkuh8TAIEiaKjGvLdFqWN5QBQ8BRRU+7nOLowyp0YB+/TYRd0oNslz+BZDEgisLWmzjvDXdJQtZuk/2TnslumTctF3uz9ankwESaBrembgC/BPye/Xpio8oaXx9huOGYqIKD8cKX1U8/lFZKCfRIHCYo+7iETBdifBp6e3jj3ABGrCeurcvC0GUPlhcnYrYTjvXsmLVCxQCWyQZ7KfW/9dnqI2ssfeTLgg6VGO5uCR+dvKaiZis9YKICfrmaKSsZBQrHXr49b7jnizTkAVbg/JG9LG/Y+Xs8LeF/8Rx270EEP0TKnwpzWzzOn2yV6D7TeFnzHq0xn+0xoehtcL0jNv7rAGgCzkS4CrR0fWdAITZylhHYBVx4aTLhJ3SEVMxexuyych6JhSWVDvq7ouYIyBKhDtHKTpTQjznsqAGVAxWXjRlbd/GOzwvwqB32pgnqfHQX7zMMOGQk0t4nHMVIieSfVetOXXUAERjiMAajWJTwI0/exeodzD0vVF9kfpOB1RLtQgSYxOyD2nu8TSloxiF5ZLzypQw1wRg0ctzpOUuz/tgIHtyK9gJtY1XYV4mgXlEdtteM6GdYoLj8AKjaOpi9evEM+QnGYsI4xoLq4P6XgDjyBpzFoUkBO8E7u0nPQRsB86yqLINLI=
+  api-key: $RUBYGEMS_API_KEY
   on:
     tags: true
     rvm: 2.4.1
