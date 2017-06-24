@@ -103,7 +103,10 @@ describe Tes::Request::RSpec::Distribute do
       jobs = project_dis.distribute_jobs(RSpec.current_example.description, 5)
       expect(jobs.size).to eq 5
     end
-
+    it 'label_exp_different' do
+      jobs = project_dis.distribute_jobs(RSpec.current_example.description, 1)
+      expect(jobs.size).to eq 2
+    end
     it 'with_one_exclude_pattern' do
       jobs = project_dis.distribute_jobs(RSpec.current_example.description, 5)
       expect(jobs.size).to eq 4

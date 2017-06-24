@@ -8,6 +8,12 @@ many_patterns:
     - spec/a/**/*_spec.rb
     - spec/b/**/*_spec.rb
     - spec/h*_spec.rb
+label_exp_different:
+  spec:
+    pattern:
+    - spec/expression_kinds/label_eq_spec.rb
+    - spec/expression_kinds/label_not_eq1_spec.rb
+    - spec/expression_kinds/label_not_eq2_spec.rb
 with_one_exclude_pattern:
   spec:
     pattern:
