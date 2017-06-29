@@ -57,4 +57,6 @@ pattern_dir_include_disabled:
     pattern: spec/include_disabled/**/*_spec.rb
 distribute_limit:
   spec:
-    pattern: spec/distribute_limit/**/*_spec.rb
+    pattern:
+    - spec/distribute_limit/standalone_spec.rb
+    - spec/distribute_limit/common_spec.rb

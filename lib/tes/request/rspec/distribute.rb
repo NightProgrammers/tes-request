@@ -71,18 +71,20 @@ module Tes
         # @param [Fixnum] minimum_pieces
         # @return [Array]
         def gen_pieces(profiles, minimum_pieces)
-          ret = []
+          common_jobs = []
+          standalone_jobs = []
+
           min_spec_count = profiles.size / minimum_pieces
 
           profiles.each do |to_merge_spec|
             # 0. 任务发布要求的特殊处理
             if to_merge_spec[:distribute] && to_merge_spec[:distribute][:standalone]
-              ret << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
+              standalone_jobs << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
               next
             end
 
             # 1. 优先相同要求的归并
-            join_piece = ret.find do |piece|
+            join_piece = common_jobs.find do |piece|
               piece[:specs].size <= min_spec_count and
                   piece[:profile] == to_merge_spec[:profile]
             end
@@ -91,7 +93,7 @@ module Tes
               join_piece[:specs] << to_merge_spec
             else
               # 2. 然后再是资源多少不同的归并
-              super_piece = ret.find do |piece|
+              super_piece = common_jobs.find do |piece|
                 if piece[:specs].size <= min_spec_count
                   cr = piece[:profile] <=> to_merge_spec[:profile]
                   cr && cr >= 0
@@ -104,8 +106,8 @@ module Tes
                 super_piece[:specs] << to_merge_spec
               else
                 # 3. 可整合计算的的归并,但要求已经达到的任务分片数已经达到了要求那么大,否则直接以新建来搞
-                if ret.size >= minimum_pieces
-                  merge_piece = ret.find do |piece|
+                if common_jobs.size >= minimum_pieces
+                  merge_piece = common_jobs.find do |piece|
                     piece[:specs].size <= min_spec_count and
                         piece[:profile].merge_able?(to_merge_spec[:profile])
                   end
@@ -117,15 +119,15 @@ module Tes
                   else
                     # 4. 最后再尝试独立出一个新的piece,在剩余数量达到一半要求的时候
                     # puts 'http://new'
-                    ret << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
+                    common_jobs << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
                   end
                 else
-                  ret << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
+                  common_jobs << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
                 end
               end
             end
           end
-          ret
+          standalone_jobs + common_jobs
         end
 
 
