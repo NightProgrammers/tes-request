@@ -55,3 +55,6 @@ spec_without_profile_declare:
 pattern_dir_include_disabled:
   spec:
     pattern: spec/include_disabled/**/*_spec.rb
+distribute_limit:
+  spec:
+    pattern: spec/distribute_limit/**/*_spec.rb

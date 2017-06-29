@@ -149,5 +149,9 @@ describe Tes::Request::RSpec::Distribute do
         project_dis.distribute_jobs(RSpec.current_example.description, 1)
       end.to raise_error(RuntimeError, /没有ci profile配置/)
     end
+    it 'distribute_limit' do
+      jobs = project_dis.distribute_jobs(RSpec.current_example.description, 1)
+      expect(jobs.size).to eq 2
+    end
   end
 end
