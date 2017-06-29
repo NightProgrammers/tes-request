@@ -9,6 +9,14 @@ describe Tes::Request::RSpec::ProfileParser do
     Tes::Request::RSpec::ProfileParser.new real_file_paths
   end
 
+  context '#parse_spec' do
+    it 'with @distribute' do
+      test_spec_file = 'spec/distribute_limit/standalone_spec.rb'
+      p = parser([])
+      spec_info = p.instance_exec(File.join(@project_dir, test_spec_file)) { |spec_f| parse_spec spec_f }
+      expect(spec_info).to include(distribute: {standalone: true})
+    end
+  end
   context '#parse_profiles!' do
     def test_h_get_profiles(files)
       p = parser(files)
@@ -67,11 +75,11 @@ describe Tes::Request::RSpec::ProfileParser do
         end
 
         expect(profiles).to include(
-                                    include(
-                                        :file => end_with('spec/a/1_spec.rb'),
-                                        :ids => contain_exactly('1:2:1', '1:2:2')
-                                    )
+                                include(
+                                    :file => end_with('spec/a/1_spec.rb'),
+                                    :ids => contain_exactly('1:2:1', '1:2:2')
                                 )
+                            )
       end
     end
   end
