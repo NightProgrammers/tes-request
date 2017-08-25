@@ -5,6 +5,7 @@ module Tes
     class Profile
       include Comparable
 
+      REG_LOCK_HEADER = /^(@|$)\s*\|+\s*/
       REG_POINT_ASK = /^\*(\d+):/
       REG_REFER_ASK = /^&(\d+)\./
       REG_POINT_ASK_GREEDY = /^\[\*(\d+)\]:/
@@ -18,15 +19,19 @@ module Tes
         # 不因申明顺序不一致性等其他差异而误判环境要求的一致性
         point_asks = {}
         profile_lines.each do |line|
+          lock_type = (line =~ REG_LOCK_HEADER and line =~ /^$/) ? :share : :lock
+
           case line
             when REG_POINT_ASK
               mt = line.match(REG_POINT_ASK)
               ask = Ask.new line.sub(REG_POINT_ASK, '')
+              ask.lock_type = lock_type
               point_asks[mt[1]] = ask
             when REG_POINT_ASK_GREEDY
               mt = line.match(REG_POINT_ASK_GREEDY)
               ask = Ask.new line.sub(REG_POINT_ASK_GREEDY, '')
               ask.greedy= true
+              ask.lock_type = lock_type
               point_asks[mt[1]] = ask
             when REG_REFER_ASK
               mt= line.match(REG_REFER_ASK)
@@ -39,7 +44,9 @@ module Tes
               ref_exp = Expression.new line.sub(REG_REFER_ASK_GREEDY, '')
               src_ask.reference << ref_exp
             else
-              @data << Ask.new(line)
+              ask = Ask.new(line)
+              ask.lock_type =lock_type
+              @data << ask
           end
         end
 
@@ -49,15 +56,15 @@ module Tes
       attr_reader :data
 
       def <=>(other)
-        all_self_hash = self.data.group_by { |e| e.to_s }
+        all_self_hash = self.data.group_by {|e| e.to_s}
         all_self_hash_keys = Set.new all_self_hash.keys
-        all_other_hash = other.data.group_by { |e| e.to_s }
+        all_other_hash = other.data.group_by {|e| e.to_s}
         all_other_hash_keys = Set.new all_other_hash.keys
 
         # 如果相等或者可比较则直接返回(只在相等的时候有效)
         return 0 if all_self_hash == all_other_hash
 
-        hash1 = Hash[all_self_hash_keys.to_a.map { |e| [e, true] }]
+        hash1 = Hash[all_self_hash_keys.to_a.map {|e| [e, true]}]
         all_other_hash_keys.to_a.each do |k|
           hash1.include?(k)
         end
@@ -99,7 +106,7 @@ module Tes
       # @param [Hash<String,Hash>] pool 所有空闲可用的资源池
       def request(pool)
         get_candidates_lab = ->(ask, answer_cache) do
-          pool.keys.select { |k| !answer_cache.include?(k) && ask.match?(pool[k]) }
+          pool.keys.select {|k| !answer_cache.include?(k) && ask.match?(pool[k])}
         end
 
         answers_flat = []
@@ -163,11 +170,11 @@ module Tes
 
       private
       def compare_when_keys_same(hash_self, hash_other)
-        size_compare_results = hash_self.keys.map { |k| hash_self[k].size <=> hash_other[k].size }
-        if size_compare_results.all? { |v| v && v <= 0 }
-          size_compare_results.any? { |v| v == -1 } ? -1 : 0
-        elsif size_compare_results.all? { |v| v && v >= 0 }
-          size_compare_results.any? { |v| v == 1 } ? 1 : 0
+        size_compare_results = hash_self.keys.map {|k| hash_self[k].size <=> hash_other[k].size}
+        if size_compare_results.all? {|v| v && v <= 0}
+          size_compare_results.any? {|v| v == -1} ? -1 : 0
+        elsif size_compare_results.all? {|v| v && v >= 0}
+          size_compare_results.any? {|v| v == 1} ? 1 : 0
         else
           nil
         end
@@ -175,7 +182,7 @@ module Tes
 
       def compare_when_keys_subset(hash_self, hash_other)
         subset_keys = hash_self.keys
-        hash_other_subset = subset_keys.inject({}) { |t, k| t.merge(k => hash_other[k]) }
+        hash_other_subset = subset_keys.inject({}) {|t, k| t.merge(k => hash_other[k])}
         ret = compare_when_keys_same(hash_self, hash_other_subset)
         ret && (ret <= 0 ? -1 : nil)
       end
@@ -184,11 +191,11 @@ module Tes
       def merge_when_keys_diff!(hash_self, hash_other)
         merge_able_lab = ->(to, from) do
           from.keys.all? do |f_ask|
-            if to.any? { |k, _| f_ask <=> k }
+            if to.any? {|k, _| f_ask <=> k}
               true
             else
               if f_ask.data['type']
-                to.keys.none? { |e| e.data['type'] && e.data['type'] and e.data['type'] == f_ask.data['type'] }
+                to.keys.none? {|e| e.data['type'] && e.data['type'] and e.data['type'] == f_ask.data['type']}
               else
                 true
               end
@@ -198,7 +205,7 @@ module Tes
         merge_lab = ->(to, from) do
           # 现将内容全部拼起来,然后合并资源
           ret_hash = {}
-          to.each { |ask, ask_dup_list| ret_hash[ask] = ask_dup_list }
+          to.each {|ask, ask_dup_list| ret_hash[ask] = ask_dup_list}
           from.each do |ask, ask_dup_list|
             # 是否有相同要求的资源要求
             if ret_hash[ask]
@@ -209,7 +216,7 @@ module Tes
               # 没有
 
               # 是否总结果中有可合并的资源请求
-              merge_able_ask = ret_hash.keys.find { |a| a <=> ask }
+              merge_able_ask = ret_hash.keys.find {|a| a <=> ask}
               if merge_able_ask
                 if merge_able_ask >= ask
                   if ret_hash[merge_able_ask].size < ask_dup_list.size
@@ -243,10 +250,10 @@ module Tes
       end
 
       def merge(other)
-        all_self_hash = self.data.group_by { |e| e.to_s }
-        all_self_hash = Hash[all_self_hash.map { |k, v| [Ask.new(k), v] }]
-        all_other_hash = other.data.group_by { |e| e.to_s }
-        all_other_hash = Hash[all_other_hash.map { |k, v| [Ask.new(k), v] }]
+        all_self_hash = self.data.group_by {|e| e.to_s}
+        all_self_hash = Hash[all_self_hash.map {|k, v| [Ask.new(k), v]}]
+        all_other_hash = other.data.group_by {|e| e.to_s}
+        all_other_hash = Hash[all_other_hash.map {|k, v| [Ask.new(k), v]}]
         all_self_hash_keys = Set.new all_self_hash.keys
         all_other_hash_keys = Set.new all_other_hash.keys
 
@@ -274,7 +281,7 @@ module Tes
         new_instance = self.class.new([])
 
 
-        result.values.flatten.each { |v| new_instance.data.push v }
+        result.values.flatten.each {|v| new_instance.data.push v}
         new_instance
       end
     end
