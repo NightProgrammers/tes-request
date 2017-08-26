@@ -103,7 +103,7 @@ module Tes
               ret = @data[:expect_val] <=> other.data[:expect_val]
               ret == 0 ? -1 : ret
             when %w(<= =)
-              @data[:expect_val] <= other.data[:expect_val] ? 1 : nil
+              @data[:expect_val] > other.data[:expect_val] ? -1 : nil
             when %w(<= <)
               ret = other.data[:expect_val] <=> @data[:expect_val]
               ret == 0 ? -1 : ret

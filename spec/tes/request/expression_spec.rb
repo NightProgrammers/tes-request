@@ -7,6 +7,8 @@ describe Tes::Request::Expression do
     context 'result:-1' do
       it('type<124 <=> type<123') { expect(ep('type<124') <=> ep('type<123')).to be == -1 }
       it('type>=124 <=> type=124') { expect(ep('type>=124') <=> ep('type=124')).to be == -1 }
+      it('hello>=1 <=> hello=2') { expect(ep('hello>=1') <=> ep('hello=2')).to be == -1 }
+      it('vs_enable<=1 <=> vs_enable=0') { expect(ep('vs_enable<=1') <=> ep('vs_enable=0')).to be == -1 }
     end
     context 'result:0' do
       it('type>=124 <=> type>=124') { expect(ep('type>=124') <=> ep('type>=124')).to be == 0 }
