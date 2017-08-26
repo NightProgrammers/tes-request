@@ -86,9 +86,9 @@ module Tes
           o_e && e <= o_e
         end
 
-        diff_ask = self.new('')
+        diff_ask = self.class.new('')
         diff_ask.data.merge!(diff_data)
-        diff_ask.lock_type = self.lock_type
+        diff_ask.lock_type = lock_type
         diff_ask
       end
 
@@ -107,14 +107,14 @@ module Tes
           self_gt_other = self.-(other)
           other_gt_self = other.-(self)
 
-          ask1 = self.new('')
-          ask2 = self.new('')
+          ask1 = self.class.new('')
+          ask2 = self.class.new('')
           ask1.data.merge!(self.data)
           ask1.data.merge!(other_gt_self)
           ask2.data.merge!(other.data)
           ask2.data.merge!(self_gt_other)
           ask = ask1 >= ask2 ? ask1 : ask2
-          ask.lock_type = (self.lock_type == other.lock_type ? self.lock_type : :lock)
+          ask.lock_type = (lock_type == other.lock_type ? lock_type : :lock)
           ask
         end
       end
