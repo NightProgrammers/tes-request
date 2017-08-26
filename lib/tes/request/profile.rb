@@ -153,16 +153,17 @@ module Tes
         ret = []
         point = 0
         @data.each do |ask|
+          header = (ask.lock_type == :share ? '$|' : '@|')
           if ask.reference and ask.reference.size > 0
             point_ask = ask
             refer_asks = ask.reference
             point += 1
-            ret << ("*#{point}:" + point_ask.to_s)
+            ret << header + ("*#{point}:" + point_ask.to_s)
             refer_asks.each do |r_ask|
               ret << ("&#{point}." + r_ask.to_s)
             end
           else
-            ret << ask.to_s
+            ret << header + ask.to_s
           end
         end
         ret.join(split)
