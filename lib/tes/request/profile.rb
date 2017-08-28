@@ -5,7 +5,7 @@ module Tes
     class Profile
       include Comparable
 
-      REG_LOCK_HEADER = /^(@|$)\s*\|+\s*/
+      REG_LOCK_HEADER = /^(@|\$)\s*\|+\s*/
       REG_POINT_ASK = /^\*(\d+):/
       REG_REFER_ASK = /^&(\d+)\./
       REG_POINT_ASK_GREEDY = /^\[\*(\d+)\]:/
@@ -18,8 +18,9 @@ module Tes
 
         # 不因申明顺序不一致性等其他差异而误判环境要求的一致性
         point_asks = {}
-        profile_lines.each do |line|
-          lock_type = (line =~ REG_LOCK_HEADER and line =~ /^$/) ? :share : :lock
+        profile_lines.each do |raw_line|
+          lock_type = (raw_line =~ REG_LOCK_HEADER and raw_line =~ /^\$/) ? :share : :lock
+          line = raw_line.sub(REG_LOCK_HEADER, '')
 
           case line
             when REG_POINT_ASK
@@ -172,10 +173,14 @@ module Tes
       private
       def compare_when_keys_same(hash_self, hash_other)
         size_compare_results = hash_self.keys.map {|k| hash_self[k].size <=> hash_other[k].size}
-        if size_compare_results.all? {|v| v && v <= 0}
-          size_compare_results.any? {|v| v == -1} ? -1 : 0
-        elsif size_compare_results.all? {|v| v && v >= 0}
-          size_compare_results.any? {|v| v == 1} ? 1 : 0
+        lock_compare_result = hash_self.keys.map do |k|
+          hash_self[k].select {|a| a.lock_type == :lock}.size <=>
+              hash_other[k].select {|a| a.lock_type == :lock}.size
+        end
+        if size_compare_results.all? {|v| v && v <= 0} and lock_compare_result.all? {|v| v && v <= 0}
+          (size_compare_results.any? {|v| v == -1} or lock_compare_result.any? {|v| v == -1}) ? -1 : 0
+        elsif size_compare_results.all? {|v| v && v >= 0} and lock_compare_result.all? {|v| v && v >= 0}
+          (size_compare_results.any? {|v| v == 1} or lock_compare_result.any? {|v| v == 1}) ? 1 : 0
         else
           nil
         end
@@ -206,12 +211,22 @@ module Tes
         merge_lab = ->(to, from) do
           # 现将内容全部拼起来,然后合并资源
           ret_hash = {}
-          to.each {|ask, ask_dup_list| ret_hash[ask] = ask_dup_list}
+          to.each do |ask, ask_dup_list|
+            lock_list = ask_dup_list.select {|a| a.lock_type == :lock}
+            share_list = ask_dup_list.select {|a| a.lock_type == :share}
+            ret_hash[ask] = lock_list + share_list
+          end
           from.each do |ask, ask_dup_list|
-            # 是否有相同要求的资源要求
+            ask_dup_lock_type_size = ask_dup_list.select {|a| a.lock_type == :lock}.size
+
+            # 是否有相同要求的资源要求,有则合并(包括锁定方式)
             if ret_hash[ask]
-              unless ret_hash[ask].size >= ask_dup_list
+              if ret_hash[ask].size < ask_dup_list
                 ret_hash[ask] += ask_dup_list[ret_hash[ask].size..-1]
+              end
+
+              if ask_dup_lock_type_size > ret_hash[ask].select {|a| a.lock_type == :lock}.size
+                ret_hash[ask][0...ask_dup_lock_type_size].each {|a| a.lock_type = :lock}
               end
             else
               # 没有
@@ -223,13 +238,26 @@ module Tes
                   if ret_hash[merge_able_ask].size < ask_dup_list.size
                     ret_hash[merge_able_ask] += ask_dup_list[ret_hash[merge_able_ask].size..-1]
                   end
+                  if ask_dup_lock_type_size > ret_hash[merge_able_ask].select {|a| a.lock_type == :lock}.size
+                    ret_hash[merge_able_ask][0...ask_dup_lock_type_size].each {|a| a.lock_type = :lock}
+                  end
                 else
                   if ret_hash[merge_able_ask].size <= ask_dup_list.size
+                    merge_able_lock_size = ret_hash[merge_able_ask].select {|a| a.lock_type == :lock}.size
                     ret_hash.delete(merge_able_ask)
+                    if ask_dup_lock_type_size < merge_able_lock_size
+                      ask_dup_list[0...merge_able_lock_size].each {|a| a.lock_type = :lock}
+                    end
                     ret_hash[ask] = ask_dup_list
                   else
+                    merge_able_lock_size = ret_hash[merge_able_ask].select {|a| a.lock_type == :lock}.size
+                    sum_lock_size = [merge_able_lock_size, ask_dup_lock_type_size].max
                     ret_hash[ask] = ask_dup_list
                     ret_hash[merge_able_ask].pop(ask_dup_list.size)
+
+                    (0...(sum_lock_size - ret_hash[merge_able_ask].select {|a| a.lock_type == :lock}.size)).each do |i|
+                      ret_hash[ask][i].lock_type = :lock
+                    end
                   end
                 end
               else
@@ -252,8 +280,8 @@ module Tes
 
       def merge(other)
         all_self_hash = self.data.group_by {|e| e.to_s}
-        all_self_hash = Hash[all_self_hash.map {|k, v| [Ask.new(k), v]}]
         all_other_hash = other.data.group_by {|e| e.to_s}
+        all_self_hash = Hash[all_self_hash.map {|k, v| [Ask.new(k), v]}]
         all_other_hash = Hash[all_other_hash.map {|k, v| [Ask.new(k), v]}]
         all_self_hash_keys = Set.new all_self_hash.keys
         all_other_hash_keys = Set.new all_other_hash.keys

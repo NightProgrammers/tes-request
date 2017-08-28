@@ -12,20 +12,27 @@ describe Tes::Request::Profile do
     it 'no' do
       a = single_str_p 'type=storage_iscsi;type=storage_iscsi;*1:type=cluster,cfg.member.size>=2;&1.cfg.member'
       b = single_str_p 'type=storage_iscsi;*1:type=cluster,cfg.member.size>=2;&1.cfg.member'
+      b_share = single_str_p 'type=storage_iscsi;$|*1:type=cluster,cfg.member.size>=2;&1.cfg.member'
       expect(a).not_to eq b
+      expect(b).not_to eq b_share
     end
   end
   context '>=' do
     it '>' do
       a = single_str_p 'type=storage_iscsi;type=storage_iscsi;*1:type=cluster;&1.cfg.member'
       b = single_str_p 'type=storage_iscsi;*1:type=cluster;&1.cfg.member'
+      b_s = single_str_p '$|type=storage_iscsi;*1:type=cluster;&1.cfg.member'
+      b_l = single_str_p '@|type=storage_iscsi;*1:type=cluster;&1.cfg.member'
       c = single_str_p '*1:type=cluster;&1.cfg.member'
       d = single_str_p '*1:type=cluster;type=storage_iscsi;&1.cfg.member'
       expect(a).to be > b
       expect(b).to be > c
+      expect(b).to be > b_s
+      expect(b_l).to be > b_s
       expect(a).to be > c
       expect(b).to eq d
       expect(b).to be >= d
+      expect(d).to be >= b_s
       expect(c).not_to be > d
     end
   end
@@ -34,14 +41,18 @@ describe Tes::Request::Profile do
     it 'a+b==a' do
       a = single_str_p 'type=storage_iscsi;type=storage_iscsi;*1:type=cluster,cfg.member.size>=2;&1.cfg.member'
       b = single_str_p '*1:type=cluster;&1.cfg.member'
-      expect { a + b }.not_to raise_error
+      c = single_str_p '$|*1:type=cluster;&1.cfg.member'
+      expect {a + b}.not_to raise_error
       expect(a + b).to be == a
       expect(b + a).to be == a
+      expect {a + c}.not_to raise_error
+      expect(a + c).to be == a
+      expect(c + a).to be == a
     end
     it 'a+b==c' do
-      a = single_str_p '*1:type=cluster,cfg.member.size>=1;&1.cfg.member;type=storage_iscsi'
-      b = single_str_p '*2:type=cluster,cfg.member.size>=2;&2.cfg.member'
-      c = single_str_p '*1:type=cluster,cfg.member.size>=2;&1.cfg.member;type=storage_iscsi'
+      a = single_str_p '$|*1:type=cluster,cfg.member.size>=1;&1.cfg.member;$|type=storage_iscsi'
+      b = single_str_p '@|*2:type=cluster,cfg.member.size>=2;&2.cfg.member'
+      c = single_str_p '@|*1:type=cluster,cfg.member.size>=2;@|&1.cfg.member;$|type=storage_iscsi'
       expect(a + b).to be == c
     end
   end
