@@ -3,7 +3,7 @@ module Tes
     class Expression
       include Comparable
 
-      REG_EXP_CHAIN = /^(!)?([0-9A-Za-z_.]+)(\?|=|>=|<=|<|>|!=)?(-?[\w]+(\.[\d]+)?)?/
+      REG_EXP_CHAIN = /^(!)?([0-9A-Za-z_.]+)(\?|=|>=|<=|<|>|!=)?(-?[\w]+([.\d]+)?)?/
 
       # @param [String] exp_str 表达式字符串
       def initialize(exp_str)
@@ -114,7 +114,7 @@ module Tes
       end
 
       def to_s
-        ret = [:left_exp, :op, :expect_val].map { |k| @data[k] }.join
+        ret = [:left_exp, :op, :expect_val].map {|k| @data[k]}.join
         ret = '!' + ret if @data[:revert]
         ret
       end

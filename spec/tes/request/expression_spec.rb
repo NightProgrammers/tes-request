@@ -25,8 +25,8 @@ describe Tes::Request::Expression do
   end
 
   context :to_s do
-    it('label.version=zh') { expect(ep('label.lang=hci5.1').to_s).to be == 'label.lang=hci5.1' }
-
+    it('label.version=hciX.Y') { expect(ep('label.lang=hci5.1').to_s).to be == 'label.lang=hci5.1' }
+    it('label.version=hciX.Y.Z') { expect(ep('label.lang=hci5.1.1').to_s).to be == 'label.lang=hci5.1.1' }
   end
 
 
