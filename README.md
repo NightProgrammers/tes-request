@@ -1,6 +1,6 @@
 # Tes::Request
 
-[![Build Status](https://travis-ci.org/sangfor-vtt/tes-request.svg)](https://travis-ci.org/sangfor-vtt/tes-request)
+[![Build Status](https://travis-ci.org/NightProgrammers/tes-request.svg)](https://travis-ci.org/NightProgrammers/tes-request)
 [![Gem Version](https://badge.fury.io/rb/tes-request.svg)](https://rubygems.org/gems/tes-request)
 
 TES(Test Env Service) request profile struct, manager lib and request tools
@@ -86,7 +86,7 @@ $ tes-client
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/sangfor-vtt/tes-request. 
+Bug reports and pull requests are welcome on GitHub at https://github.com/NightProgrammers/tes-request. 
 This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
