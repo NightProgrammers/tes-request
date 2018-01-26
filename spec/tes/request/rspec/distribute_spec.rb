@@ -2,19 +2,19 @@ require_relative '../../../../lib/tes/request/rspec/distribute'
 require 'fileutils'
 
 describe Tes::Request::RSpec::Distribute do
-  let(:project_dir) { File.join(RSpec::Root, '.data') }
-  subject(:project_dis) { Tes::Request::RSpec::Distribute.new(project_dir) }
+  let(:project_dir) {File.join(RSpec::Root, '.data')}
+  subject(:project_dis) {Tes::Request::RSpec::Distribute.new(project_dir)}
 
   context '#spec_files' do
     it 'one_pattern' do
-      files = subject.instance_exec { spec_files(RSpec.current_example.description) }
+      files = subject.instance_exec {spec_files(RSpec.current_example.description)}
       expect(files).to contain_exactly(
                            end_with('spec/a/2/test1_spec.rb'),
                            end_with('spec/a/1_spec.rb')
                        )
     end
     it 'many_patterns' do
-      files = subject.instance_exec { spec_files(RSpec.current_example.description) }
+      files = subject.instance_exec {spec_files(RSpec.current_example.description)}
       expect(files).to contain_exactly(
                            end_with('spec/a/2/test1_spec.rb'),
                            end_with('spec/a/1_spec.rb'),
@@ -26,7 +26,7 @@ describe Tes::Request::RSpec::Distribute do
                        )
     end
     it 'with_one_exclude_pattern' do
-      files = subject.instance_exec { spec_files(RSpec.current_example.description) }
+      files = subject.instance_exec {spec_files(RSpec.current_example.description)}
       expect(files).to contain_exactly(
                            end_with('spec/a/2/test1_spec.rb'),
                            end_with('spec/a/1_spec.rb'),
@@ -35,7 +35,7 @@ describe Tes::Request::RSpec::Distribute do
                        )
     end
     it 'with_many_exclude_pattern' do
-      files = subject.instance_exec { spec_files(RSpec.current_example.description) }
+      files = subject.instance_exec {spec_files(RSpec.current_example.description)}
       expect(files).to contain_exactly(
                            end_with('spec/a/2/test1_spec.rb'),
                            end_with('spec/a/1_spec.rb'),
@@ -43,7 +43,7 @@ describe Tes::Request::RSpec::Distribute do
                        )
     end
     it 'pattern_with_locations' do
-      files = subject.instance_exec { spec_files(RSpec.current_example.description) }
+      files = subject.instance_exec {spec_files(RSpec.current_example.description)}
       expect(files).to contain_exactly(
                            end_with('spec/a/2/test1_spec.rb:13'),
                            end_with('spec/a/1_spec.rb:16'),
@@ -54,7 +54,7 @@ describe Tes::Request::RSpec::Distribute do
                        )
     end
     it 'pattern_with_ids_no_inherit' do
-      files = subject.instance_exec { spec_files(RSpec.current_example.description) }
+      files = subject.instance_exec {spec_files(RSpec.current_example.description)}
       expect(files).to contain_exactly(
                            end_with('spec/a/2/test1_spec.rb[1:1:1:1]'),
                            end_with('spec/a/1_spec.rb[1:1:2]'),
@@ -65,24 +65,24 @@ describe Tes::Request::RSpec::Distribute do
                        )
     end
     it 'pattern_dir_include_disabled' do
-      files = subject.instance_exec { spec_files(RSpec.current_example.description) }
+      files = subject.instance_exec {spec_files(RSpec.current_example.description)}
       expect(files).to contain_exactly(end_with('spec/include_disabled/1_spec.rb'))
     end
     it 'exclude_res_with_special_attributes' do
       begin
         file_name = File.join(project_dir, Tes::Request::RSpec::Distribute::EXCLUDE_CLUSTER_RES_PATTERN_PROFILE)
         ['yyy:label.label_x=a', 'type=yyy,label.label_x=a'].each do |test_data|
-          File.open(file_name, 'w') { |f| f.write test_data }
-          files = subject.instance_exec { spec_files('many_patterns') }
+          File.open(file_name, 'w') {|f| f.write test_data}
+          files = subject.instance_exec {spec_files('many_patterns')}
           expect(files).not_to include(include('spec/a/2/test1_spec.rb'),
                                        include('spec/a/1_spec.rb'))
-          files = subject.instance_exec { spec_files('pattern_with_locations') }
+          files = subject.instance_exec {spec_files('pattern_with_locations')}
           expect(files).not_to include(include('spec/a/2/test1_spec.rb'),
                                        include('spec/a/1_spec.rb'))
-          files = subject.instance_exec { spec_files('pattern_with_ids_no_inherit') }
+          files = subject.instance_exec {spec_files('pattern_with_ids_no_inherit')}
           expect(files).not_to include(include('spec/a/2/test1_spec.rb'),
                                        include('spec/a/1_spec.rb'))
-          files = subject.instance_exec { spec_files('pattern_with_ids_inherit') }
+          files = subject.instance_exec {spec_files('pattern_with_ids_inherit')}
           expect(files).not_to include(include('spec/a/2/test1_spec.rb'),
                                        include('spec/a/1_spec.rb'))
         end
@@ -126,21 +126,21 @@ describe Tes::Request::RSpec::Distribute do
     it 'pattern_with_locations' do
       jobs = project_dis.distribute_jobs(RSpec.current_example.description, 1)
       expect(jobs.size).to eq 2
-      all_spec_paths = jobs.map { |job| job[:specs] }.flatten
+      all_spec_paths = jobs.map {|job| job[:specs]}.flatten
       expect(all_spec_paths.size).to eq 5
       expect(all_spec_paths).to include('spec/a/2/test1_spec.rb:13', 'spec/a/1_spec.rb:13:16')
     end
     it 'pattern_with_ids_no_inherit' do
       jobs = project_dis.distribute_jobs(RSpec.current_example.description, 1)
       expect(jobs.size).to eq 2
-      all_spec_paths = jobs.map { |job| job[:specs] }.flatten
+      all_spec_paths = jobs.map {|job| job[:specs]}.flatten
       expect(all_spec_paths.size).to eq 5
       expect(all_spec_paths).to include('spec/a/2/test1_spec.rb[1:1:1:1]', 'spec/a/1_spec.rb[1:1:1,1:1:2]')
     end
     it 'pattern_with_ids_inherit' do
       jobs = project_dis.distribute_jobs(RSpec.current_example.description, 1)
       expect(jobs.size).to eq 2
-      all_spec_paths = jobs.map { |job| job[:specs] }.flatten
+      all_spec_paths = jobs.map {|job| job[:specs]}.flatten
       expect(all_spec_paths.size).to eq 5
       expect(all_spec_paths).to include('spec/a/2/test1_spec.rb[1:1]', 'spec/a/1_spec.rb[1:2]')
     end
@@ -152,6 +152,53 @@ describe Tes::Request::RSpec::Distribute do
     it 'distribute_limit' do
       jobs = project_dis.distribute_jobs(RSpec.current_example.description, 1)
       expect(jobs.size).to eq 2
+    end
+    it 'distribute adapt pool' do
+      #   *1:type=yyy,cfg.member.size>=2,label.label_x=b
+      #   &1.cfg.member
+      #   type=xxx
+      #   type=aaa
+      pool_mit = {
+          '123' => {
+              type: 'yyy',
+              cfg: {
+                  master: '789',
+                  member: ['789', 'abc']
+              },
+              label: {
+                  label_x: 'b'
+              }
+          },
+          '456' => {
+              type: 'xxx',
+              cfg: {
+                  ip: '1.1.1.1'
+              }
+          },
+          '789' => {
+              type: 'child',
+              cfg: {
+                  ip: '2.1.1.1'
+              }
+          },
+          'abc' => {
+              type: 'child',
+              cfg: {
+                  ip: '3.1.1.1'
+              }
+          },
+          'edf' => {
+              type: 'aaa',
+              cfg: {
+                  ip: 'aaaaa'
+              }
+          },
+
+      }
+      pool_not_mit = pool_mit.reject {|k, _v| k == '123'}
+      expect(project_dis.distribute_jobs('all', 1).size).to be 6
+      expect(project_dis.distribute_jobs('all', 1, {}, pool_mit).size).to be 1
+      expect(project_dis.distribute_jobs('all', 1, {}, pool_not_mit)).to be_empty
     end
   end
 end

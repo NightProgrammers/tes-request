@@ -24,18 +24,22 @@ module Tes
         attr_reader :project_dir, :ci_cfg
 
         # 生成分发任务的配置结构
+        # @param [String] type task type
+        # @param [Integer] count 分批任务数
+        # @param [Hash] res_addition_attr_map 资源属性需要调整的映射表
+        # @param [Hash,nil] adapt_pool
         # @return [Array<Hash>]
-        def distribute_jobs(type, count, res_addition_attr_map=nil)
+        def distribute_jobs(type, count, res_addition_attr_map={}, adapt_pool = {})
           task_cfg = get_rspec_task(type)
           spec_paths = spec_files(type)
           rspec_parser = Tes::Request::RSpec::ProfileParser.new(spec_paths)
           rspec_parser.parse_profiles!
+          rspec_profiles = rspec_parser.profiles
 
-          gen_pieces(rspec_parser.profiles, count).map do |piece|
-            profile = piece[:profile]
-            if res_addition_attr_map and res_addition_attr_map.size > 0
+          if res_addition_attr_map and res_addition_attr_map.size > 0
+            rspec_profiles.each do |spec|
               res_addition_attr_map.each do |res_filter_pattern, attr_add_map|
-                request_asks = profile.data.select { |ask| ask.to_s.include? res_filter_pattern }
+                request_asks = spec[:profile].data.select {|ask| ask.to_s.include? res_filter_pattern}
                 request_asks.each do |ask|
                   # only add the resource attribution when no request the attribution for the resource
                   attr_add_map.each do |attr_name, attr_limit|
@@ -46,7 +50,19 @@ module Tes
                 end
               end
             end
+          end
 
+
+          if adapt_pool and adapt_pool.size > 0
+            rspec_profiles.delete_if do |spec|
+              pool_not_satisfied = !(spec[:profile].request(adapt_pool).all?)
+              warn "POOL is not satisfied for: #{spec[:file]}" if pool_not_satisfied
+              pool_not_satisfied
+            end
+          end
+
+          gen_pieces(rspec_profiles, count).map do |piece|
+            profile = piece[:profile]
             specs = piece[:specs].inject([]) do |t, spec|
               file_path = spec[:file].sub(/^#{@project_dir}/, '').sub(/^\//, '')
               if (spec[:locations] and spec[:locations].size > 0) or (spec[:ids] and spec[:ids].size > 0)
@@ -63,7 +79,7 @@ module Tes
             end
 
             {profile: profile, specs: specs}
-          end.map { |p| p.merge(tag: task_cfg['tag']) }
+          end.map {|p| p.merge(tag: task_cfg['tag'])}
         end
 
         private
@@ -89,7 +105,6 @@ module Tes
                   piece[:profile] == to_merge_spec[:profile]
             end
             if join_piece
-              # puts 'http://join'
               join_piece[:specs] << to_merge_spec
             else
               # 2. 然后再是资源多少不同的归并
@@ -102,7 +117,6 @@ module Tes
                 end
               end
               if super_piece
-                # puts 'http://inherit'
                 super_piece[:specs] << to_merge_spec
               else
                 # 3. 可整合计算的的归并,但要求已经达到的任务分片数已经达到了要求那么大,否则直接以新建来搞
@@ -112,13 +126,10 @@ module Tes
                         piece[:profile].merge_able?(to_merge_spec[:profile])
                   end
                   if merge_piece
-                    # puts 'http://merge'
                     merge_piece[:profile] = merge_piece[:profile] + to_merge_spec[:profile]
-                    # puts merge_piece[:profile]
                     merge_piece[:specs] << to_merge_spec
                   else
                     # 4. 最后再尝试独立出一个新的piece,在剩余数量达到一半要求的时候
-                    # puts 'http://new'
                     common_jobs << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
                   end
                 else
@@ -165,7 +176,7 @@ module Tes
                     pattern_filter_lab.call(pattern)
                     Dir[File.join(@project_dir, pattern)]
                   when Array
-                    pattern.inject([]) { |t, ep| t + pattern_filter_lab.call(ep) }
+                    pattern.inject([]) {|t, ep| t + pattern_filter_lab.call(ep)}
                   else
                     raise('Error pattern type')
                 end
@@ -176,7 +187,7 @@ module Tes
             when String
               ret -= Dir[File.join(@project_dir, exclude_pattern)]
             when Array
-              ret -= exclude_pattern.inject([]) { |t, ep| t + Dir[File.join(@project_dir, ep)] }
+              ret -= exclude_pattern.inject([]) {|t, ep| t + Dir[File.join(@project_dir, ep)]}
             else
               raise('Error exclude_pattern type')
           end
@@ -206,7 +217,7 @@ module Tes
                             exclude_pattern
                           end
               res_attrs = res_attrs.split(',')
-              profile_lines.any? { |line| res_attrs.all? { |attr| line =~ /\b#{attr}\b/ } }
+              profile_lines.any? {|line| res_attrs.all? {|attr| line =~ /\b#{attr}\b/}}
             end
           end
         end

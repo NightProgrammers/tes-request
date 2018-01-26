@@ -3,11 +3,12 @@
 require 'tes/request/rspec/ci_slicer'
 
 usage = <<EOF
-Usage: % #{$0} {#{Tes::Request::RSpec::CiSlicer::SUPPORT_FILE_TYPES.join('|')}} {project_dir} {job_type} {job_min_pieces} [res_addition_attr_map_json_file_path]
+Usage: % #{$0} {#{Tes::Request::RSpec::CiSlicer::SUPPORT_FILE_TYPES.join('|')}} {project_dir} {job_type} {job_min_pieces} [res_addition_attr_map_json_file_path] [pool_url_to_adapt]
 
 Example:
    #{$0} json apps/test_project ci_merge_test 4
    #{$0} properties apps/test_project func_test 16 apps/test_project/res_attr_add_map.json
+   #{$0} properties apps/test_project func_test 16 apps/test_project/res_attr_add_map.json http://tes.server.com/func_test/
 EOF
 
 if ARGV.size < 4
@@ -20,7 +21,8 @@ project_dir = ARGV.shift
 ci_job_type = ARGV.shift
 job_piece_count = ARGV.shift
 res_addition_attr_map_json_file = ARGV.shift
+pool_url = ARGV.shift
 Tes::Request::RSpec::CiSlicer.
-    new(cfg_type, project_dir, res_addition_attr_map_json_file).
+    new(cfg_type, project_dir, res_addition_attr_map_json_file, pool_url).
     run(ci_job_type, job_piece_count.to_i)
 

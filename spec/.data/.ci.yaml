@@ -60,3 +60,7 @@ distribute_limit:
     pattern:
     - spec/distribute_limit/standalone_spec.rb
     - spec/distribute_limit/common_spec.rb
+all:
+  spec:
+    pattern: spec/**/*_spec.rb
+    exclude_pattern: spec/some_no_profile/**/*_spec.rb
