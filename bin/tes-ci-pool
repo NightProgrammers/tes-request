@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+
+require 'tes/request/rspec/ci_pool'
+
+usage = <<EOF
+Usage:
+  #{$0} {tes_pool_url} #{Tes::Request::RSpec::CiPool::SUPPORT_FUNCTIONS.join('|')} {project_dir} {job_type} [res_addition_attr_map_json_file_path]
+
+Example:
+   #{$0} http://tes.com/func/ satisfy apps/test_project func_test apps/test_project/res_attr_add_map.json
+EOF
+
+if ARGV.size < 4
+  warn usage
+  exit 2
+end
+
+tes_pool_url = ARGV.shift
+pool_func = ARGV.shift.to_sym
+project_dir = ARGV.shift
+ci_job_type = ARGV.shift
+res_addition_attr_map_json_file = ARGV.shift
+Tes::Request::RSpec::CiPool.
+    new(tes_pool_url, pool_func).
+    run(project_dir, ci_job_type, res_addition_attr_map_json_file)
+
+
+
