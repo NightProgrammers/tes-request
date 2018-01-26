@@ -53,10 +53,13 @@ module Tes
       end
 
       def release_all_res(user)
-        res_list = parse_res @driver.get('res')
-        res_list[:data].select {|_k, c| c[:users] && c[:users].include?(user)}.each do |id, _c|
+        get_all_res.select {|_k, c| c[:users] && c[:users].include?(user)}.each do |id, _c|
           release_res(id, user)
         end
+      end
+
+      def get_all_res
+        parse_res(@driver.get('res'))[:data]
       end
 
       private
