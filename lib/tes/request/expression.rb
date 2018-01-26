@@ -1,3 +1,5 @@
+require_relative '../../hash'
+
 module Tes
   module Request
     class Expression
