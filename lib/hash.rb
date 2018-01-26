@@ -17,8 +17,8 @@ class Hash
   # @param [String] chain_str 嵌套取值表达式
   # @return [Object]
   def get_by_chain(chain_str)
-    chains = chain_str.split('.')
-    chains.keep_if { |k| k =~ /.+/ }
-    chains.inject(self) { |t, p| t && t.send(p) }
+    chains = chain_str.split('.').map(&:to_sym)
+    chains.keep_if {|k| k =~ /.+/}
+    chains.inject(self) {|t, p| t && t.send(p)}
   end
 end
