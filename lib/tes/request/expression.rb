@@ -5,7 +5,7 @@ module Tes
     class Expression
       include Comparable
 
-      REG_EXP_CHAIN = /^(!)?([0-9A-Za-z_.]+)(\?|=|>=|<=|<|>|!=)?(-?[\w]+([.\d]+)?)?/
+      REG_EXP_CHAIN = /^(!)?([0-9A-Za-z_.]+)(\?|==|>=|<=|<|>|=|!=)?([\w-\.]+)?/
 
       # @param [String] exp_str 表达式字符串
       def initialize(exp_str)
@@ -18,16 +18,19 @@ module Tes
 
         if mt[3]
           @data[:op] = mt[3]
+          @data[:op] = '==' if @data[:op] == '='
           if mt[4]
             @data[:expect_val] = mt[4]
-            if @data[:expect_val] =~ /^-?\d+(\.[\d]+)?/
-              @data[:expect_val] = mt[5] ? @data[:expect_val].to_f : @data[:expect_val].to_i
+            if @data[:expect_val] =~ /^-?\d+(\.[\d]+)$/
+              @data[:expect_val] = @data[:expect_val].to_f
+            elsif @data[:expect_val] =~ /^-?\d+$/
+              @data[:expect_val] = @data[:expect_val].to_i
             end
 
             # 处理前置 逻辑非 与表达式中的不等比较符
             if @data[:op] == '!='
               @data[:revert] = (@data[:revert] ? false : true)
-              @data[:op] = '='
+              @data[:op] = '=='
             end
           end
         end
@@ -48,13 +51,12 @@ module Tes
                 elsif op == '?'
                   chain_data = data.get_by_chain(@data[:left_exp])
                   case chain_data
-                    when 'off', 'down', 'disable', '0', '', 0
-                      false
-                    else
-                      chain_data
+                  when 'off', 'down', 'disable', '0', '', 0
+                    false
+                  else
+                    chain_data
                   end
                 else
-                  op = '==' if op == '='
                   expect_val = @data[:expect_val]
                   data.get_by_chain(@data[:left_exp]).send(op, expect_val)
                 end
@@ -68,49 +70,49 @@ module Tes
 
         if @data[:op] == other.data[:op]
           case @data[:op]
-            when '=', '=='
-              (@data[:expect_val] == other.data[:expect_val]) ? 0 : nil
-            when '>', '>='
-              @data[:expect_val] <=> other.data[:expect_val]
-            when '<', '<='
-              other.data[:expect_val] <=> @data[:expect_val]
-            when '?', nil
-              0
-            else
-              raise("内部错误:出现了不支持的表达式操作符号:#{@data[:op]}")
+          when '=='
+            (@data[:expect_val] == other.data[:expect_val]) ? 0 : nil
+          when '>', '>='
+            @data[:expect_val] <=> other.data[:expect_val]
+          when '<', '<='
+            other.data[:expect_val] <=> @data[:expect_val]
+          when '?', nil
+            0
+          else
+            raise("内部错误:出现了不支持的表达式操作符号:#{@data[:op]}")
           end
         else
           case [@data[:op], other.data[:op]]
-            when %w(< <=)
-              ret = other.data[:expect_val] <=> @data[:expect_val]
-              ret == 0 ? 1 : ret
-            when %w(< =)
-              @data[:expect_val] > other.data[:expect_val] ? -1 : nil
-            when %w(= >)
-              @data[:expect_val] > other.data[:expect_val] ? 1 : nil
-            when %w(= >=)
-              @data[:expect_val] >= other.data[:expect_val] ? 1 : nil
-            when %w(= <)
-              @data[:expect_val] < other.data[:expect_val] ? 1 : nil
-            when %w(= <=)
-              @data[:expect_val] <= other.data[:expect_val] ? 1 : nil
-            when %w(> >=)
-              ret = @data[:expect_val] <=> other.data[:expect_val]
-              ret == 0 ? 1 : ret
-            when %w(> =)
-              @data[:expect_val] < other.data[:expect_val] ? -1 : nil
-            when %w(>= =)
-              @data[:expect_val] <= other.data[:expect_val] ? -1 : nil
-            when %w(>= >)
-              ret = @data[:expect_val] <=> other.data[:expect_val]
-              ret == 0 ? -1 : ret
-            when %w(<= =)
-              @data[:expect_val] > other.data[:expect_val] ? -1 : nil
-            when %w(<= <)
-              ret = other.data[:expect_val] <=> @data[:expect_val]
-              ret == 0 ? -1 : ret
-            else
-              nil
+          when %w(< <=)
+            ret = other.data[:expect_val] <=> @data[:expect_val]
+            ret == 0 ? 1 : ret
+          when %w(< ==)
+            @data[:expect_val] > other.data[:expect_val] ? -1 : nil
+          when %w(== >)
+            @data[:expect_val] > other.data[:expect_val] ? 1 : nil
+          when %w(== >=)
+            @data[:expect_val] >= other.data[:expect_val] ? 1 : nil
+          when %w(== <)
+            @data[:expect_val] < other.data[:expect_val] ? 1 : nil
+          when %w(== <=)
+            @data[:expect_val] <= other.data[:expect_val] ? 1 : nil
+          when %w(> >=)
+            ret = @data[:expect_val] <=> other.data[:expect_val]
+            ret == 0 ? 1 : ret
+          when %w(> ==)
+            @data[:expect_val] < other.data[:expect_val] ? -1 : nil
+          when %w(>= ==)
+            @data[:expect_val] <= other.data[:expect_val] ? -1 : nil
+          when %w(>= >)
+            ret = @data[:expect_val] <=> other.data[:expect_val]
+            ret == 0 ? -1 : ret
+          when %w(<= ==)
+            @data[:expect_val] > other.data[:expect_val] ? -1 : nil
+          when %w(<= <)
+            ret = other.data[:expect_val] <=> @data[:expect_val]
+            ret == 0 ? -1 : ret
+          else
+            nil
           end
         end
       end
