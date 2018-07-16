@@ -5,7 +5,7 @@ module Tes
     class Expression
       include Comparable
 
-      REG_EXP_CHAIN = /^(!)?([0-9A-Za-z_.]+)(\?|==|>=|<=|<|>|=|!=)?([\w-\.]+)?/
+      REG_EXP_CHAIN = /^(!)?([0-9A-Za-z_.]+)(\?|==|>=|<=|<|>|=|!=)?([.\-\w]+)?/
 
       # @param [String] exp_str 表达式字符串
       def initialize(exp_str)
