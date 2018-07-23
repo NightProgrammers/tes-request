@@ -14,4 +14,4 @@ deploy:
   api-key: $RUBYGEMS_API_KEY
   on:
     tags: true
-    rvm: 2.4.1
+    rvm: 2.5.1
