@@ -16,7 +16,7 @@ module Tes
 
         # @param [String] project_dir 测试项目的根目录路径
         # @param [String] ci_yaml_file 测试项目内的描述spec测试的配置文件路径(相对`project_dir`)
-        def initialize(project_dir, ci_yaml_file=@@ci_yaml_file)
+        def initialize(project_dir, ci_yaml_file = @@ci_yaml_file)
           @project_dir = project_dir
           @ci_cfg = YAML.load_file(File.join(@project_dir, ci_yaml_file))
         end
@@ -29,7 +29,7 @@ module Tes
         # @param [Hash] res_addition_attr_map 资源属性需要调整的映射表
         # @param [Hash,nil] adapt_pool
         # @return [Array<Hash>]
-        def distribute_jobs(type, count, res_addition_attr_map={}, adapt_pool = {})
+        def distribute_jobs(type, count, res_addition_attr_map = {}, adapt_pool = {})
           task_cfg = get_rspec_task(type)
           spec_paths = spec_files(type)
           rspec_parser = Tes::Request::RSpec::ProfileParser.new(spec_paths)
@@ -83,16 +83,16 @@ module Tes
         end
 
         private
+
         # 生产任务碎片,尽量接近传递的参数值
         # @param [Fixnum] minimum_pieces
         # @return [Array]
         def gen_pieces(profiles, minimum_pieces)
           common_jobs = []
           standalone_jobs = []
-
           min_spec_count = profiles.size / minimum_pieces
 
-          profiles.each do |to_merge_spec|
+          profiles.sort_by {rand}.each do |to_merge_spec|
             # 0. 任务发布要求的特殊处理
             if to_merge_spec[:distribute] && to_merge_spec[:distribute][:standalone]
               standalone_jobs << {profile: to_merge_spec[:profile], specs: [to_merge_spec]}
@@ -100,31 +100,31 @@ module Tes
             end
 
             # 1. 优先相同要求的归并
-            join_piece = common_jobs.find do |piece|
+            join_piece = common_jobs.select do |piece|
               piece[:specs].size <= min_spec_count and
                   piece[:profile] == to_merge_spec[:profile]
-            end
+            end.sample
             if join_piece
               join_piece[:specs] << to_merge_spec
             else
               # 2. 然后再是资源多少不同的归并
-              super_piece = common_jobs.find do |piece|
+              super_piece = common_jobs.select do |piece|
                 if piece[:specs].size <= min_spec_count
                   cr = piece[:profile] <=> to_merge_spec[:profile]
                   cr && cr >= 0
                 else
                   false
                 end
-              end
+              end.sample
               if super_piece
                 super_piece[:specs] << to_merge_spec
               else
                 # 3. 可整合计算的的归并,但要求已经达到的任务分片数已经达到了要求那么大,否则直接以新建来搞
                 if common_jobs.size >= minimum_pieces
-                  merge_piece = common_jobs.find do |piece|
+                  merge_piece = common_jobs.select do |piece|
                     piece[:specs].size <= min_spec_count and
                         piece[:profile].merge_able?(to_merge_spec[:profile])
-                  end
+                  end.sample
                   if merge_piece
                     merge_piece[:profile] = merge_piece[:profile] + to_merge_spec[:profile]
                     merge_piece[:specs] << to_merge_spec
@@ -164,7 +164,7 @@ module Tes
         end
 
         # @return [Array<String>]
-        def filter_spec_by_path(pattern, exclude_pattern=nil)
+        def filter_spec_by_path(pattern, exclude_pattern = nil)
           pattern_filter_lab = ->(p) do
             spec_info = get_spec_path_info(p)
             direct_return = (spec_info[:locations] or spec_info[:ids])
@@ -172,24 +172,24 @@ module Tes
           end
 
           ret = case pattern
-                  when String
-                    pattern_filter_lab.call(pattern)
-                    Dir[File.join(@project_dir, pattern)]
-                  when Array
-                    pattern.inject([]) {|t, ep| t + pattern_filter_lab.call(ep)}
-                  else
-                    raise('Error pattern type')
+                when String
+                  pattern_filter_lab.call(pattern)
+                  Dir[File.join(@project_dir, pattern)]
+                when Array
+                  pattern.inject([]) {|t, ep| t + pattern_filter_lab.call(ep)}
+                else
+                  raise('Error pattern type')
                 end
 
           return ret unless exclude_pattern
 
           case exclude_pattern
-            when String
-              ret -= Dir[File.join(@project_dir, exclude_pattern)]
-            when Array
-              ret -= exclude_pattern.inject([]) {|t, ep| t + Dir[File.join(@project_dir, ep)]}
-            else
-              raise('Error exclude_pattern type')
+          when String
+            ret -= Dir[File.join(@project_dir, exclude_pattern)]
+          when Array
+            ret -= exclude_pattern.inject([]) {|t, ep| t + Dir[File.join(@project_dir, ep)]}
+          else
+            raise('Error exclude_pattern type')
           end
 
           ret
@@ -203,7 +203,7 @@ module Tes
         #   或者
         #     type=res_type,res_attr1=2,res_attr3>=4
         # @return [Array<String>] 按照`res_exclude_pattern` 剔除后的 `spec_paths`
-        def exclude_spec_by_resource(spec_paths, res_exclude_patterns=[])
+        def exclude_spec_by_resource(spec_paths, res_exclude_patterns = [])
           return spec_paths if res_exclude_patterns.empty?
 
           spec_paths.reject do |spec_path|
