@@ -199,9 +199,9 @@ module Tes
         # @param [Array<String>] spec_paths spec的执行路径列表
         # @param [Array<String>] res_exclude_patterns,
         #   每一个元素的格式是这样:
-        #     res_type: res_attr1=2,res_attr3>=4
+        #     res_type: res_attr1==2,res_attr3>=4
         #   或者
-        #     type=res_type,res_attr1=2,res_attr3>=4
+        #     type==res_type,res_attr1==2,res_attr3>=4
         # @return [Array<String>] 按照`res_exclude_pattern` 剔除后的 `spec_paths`
         def exclude_spec_by_resource(spec_paths, res_exclude_patterns = [])
           return spec_paths if res_exclude_patterns.empty?
@@ -212,7 +212,7 @@ module Tes
             res_exclude_patterns.any? do |exclude_pattern|
               res_attrs = if exclude_pattern =~ /^\w+:\s*.+/
                             type, attrs = exclude_pattern.split(/:\s*/, 2)
-                            "type=#{type}," + attrs
+                            "type==#{type}," + attrs
                           else
                             exclude_pattern
                           end
